@@ -4,6 +4,27 @@ require 'nokogiri'
 require 'open-uri'
 require 'thor'
 
+class PictureDocument
+
+	def initialize url, domain_name
+		@document = Nokogiri::HTML(open(url))
+		@domain_name = domain_name
+	end
+
+	def image_url
+		download_link = @document.css('.download_link a')
+		if download_link.empty?
+			return nil
+		else
+			return download_link.first.attributes["href"].value
+		end
+	end
+
+	def next_page_url
+		@domain_name + @document.css('.prev a').first.attributes["href"].value
+	end
+end
+
 class NationalGeographicDownloader < Thor
 
 	LAST_DOWNLOADED_PATH = '.last_download'
@@ -29,20 +50,19 @@ class NationalGeographicDownloader < Thor
 		end
 		number_of_downloaded_pictures = 0
 		while number_of_downloaded_pictures <= options.number_of_pictures do
-			document = Nokogiri::HTML(open(@url))
-			download_link = document.css('.download_link a')
-			if ( download_link.empty? )
-				# skip and go to next page
-				puts "Page at url #{@url} has no download link, skipping..."
-			else
+			picture_document = PictureDocument.new(@url, domain_name)
+			image_url = picture_document.image_url
+			if image_url
 				# download picture
 				print "Download link found in page at url #{@url}, proceeding..."
-				image_path = download_link.first.attributes["href"].value
-				system("wget #{image_path} 2>/dev/null")
+				system("wget #{image_url} 2>/dev/null")
 				puts " [DONE]"
 				number_of_downloaded_pictures = number_of_downloaded_pictures + 1
+			else
+				# skip and go to next page
+				puts "Page at url #{@url} has no download link, skipping..."
 			end
-			@url = domain_name + document.css('.prev a').first.attributes["href"].value
+			@url = picture_document.next_page_url
 		end
 		puts "Last downloaded picture was at url #{@url}"
 		File.open(LAST_DOWNLOADED_PATH, 'w') do |file|
