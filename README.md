@@ -12,6 +12,7 @@ Requirements:
 * ruby, rubygems
 * nokogiri
 * thor
+* wget
 
 Usage
 ----
