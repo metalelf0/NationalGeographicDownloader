@@ -4,6 +4,8 @@ National Geographic Downloader
 National Geographic photo of the day is so cool, so why cant we setup a script to download them all?
 I really enjoy having them as wallpapers, and I used to save them all navigating the site, so I decided to speedup the process!
 
+Note that this download actually browses the site using Nokogiri, so it's not too much faster than the fastest user, it should comply to the TOS of NationalGeographic.
+
 Here's a small ruby script to do what you need.
 
 Requirements:
