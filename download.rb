@@ -3,6 +3,7 @@ require 'rubygems'
 require 'nokogiri'
 require 'open-uri'
 require 'thor'
+require 'ruby-debug'
 
 class PictureDocument
 
@@ -21,7 +22,9 @@ class PictureDocument
 	end
 
 	def next_page_url
-		@domain_name + @document.css('.prev a').first.attributes["href"].value
+		next_page_url = @domain_name + @document.css('.prev a').first.attributes["href"].value
+		puts next_page_url
+		return next_page_url
 	end
 end
 
@@ -29,10 +32,13 @@ class NationalGeographicDownloader < Thor
 
 	LAST_DOWNLOADED_PATH = '.last_download'
 
+
 	desc 'download', 'Downloads pictures'
 	method_option :number_of_pictures, :type => :numeric, :aliases => '-n', :default => 10
 	method_option :starting_url, :type => :string, :aliases => '-s', :default => "http://photography.nationalgeographic.com/photography/photo-of-the-day"
 	method_option :resume_from_last_download, :type => :boolean, :aliases => '-r', :default => false
+	method_option :download_dir, :type => :string, :aliases => '-d', :default => './'
+	method_options :force_overwrite => false
 	def download
 		domain_name = "http://photography.nationalgeographic.com"
 		if options.resume_from_last_download
@@ -55,7 +61,12 @@ class NationalGeographicDownloader < Thor
 			if image_url
 				# download picture
 				print "Download link found in page at url #{@url}, proceeding..."
-				system("wget #{image_url} 2>/dev/null")
+				target_path = File.join(options.download_dir, image_url.split('/').last)
+				if File.exist?(target_path) && (options.force_overwrite != true)
+					puts "Image #{target_path} already downloaded, exiting! Bye!"
+					exit
+				end
+				system("wget #{image_url} -O #{target_path}  2>/dev/null")
 				puts " [DONE]"
 				number_of_downloaded_pictures = number_of_downloaded_pictures + 1
 			else
