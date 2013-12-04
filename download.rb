@@ -1,9 +1,7 @@
 #!/usr/bin/env ruby
-require 'rubygems'
 require 'nokogiri'
 require 'open-uri'
 require 'thor'
-require 'ruby-debug'
 
 class PictureDocument
 
